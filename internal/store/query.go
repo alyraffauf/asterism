@@ -19,7 +19,7 @@ func (s *Store) CountBacklinks(ctx context.Context, target, collection, fieldPat
 	return total, nil
 }
 
-func (s *Store) DistinctBacklinkDids(ctx context.Context, target, collection, fieldPath string, limit uint64) (total uint64, dids []string, err error) {
+func (s *Store) DistinctBacklinkDids(ctx context.Context, target, collection, fieldPath string, after string, limit uint64) (total uint64, dids []string, err error) {
 	err = s.db.QueryRowContext(ctx,
 		`SELECT COUNT(DISTINCT actor_did) FROM links WHERE target = ? AND collection = ? AND field_path = ?`,
 		target, collection, fieldPath,
@@ -29,8 +29,10 @@ func (s *Store) DistinctBacklinkDids(ctx context.Context, target, collection, fi
 	}
 
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT DISTINCT actor_did FROM links WHERE target = ? AND collection = ? AND field_path = ? LIMIT ?`,
-		target, collection, fieldPath, limit,
+		`SELECT DISTINCT actor_did FROM links
+		 WHERE target = ? AND collection = ? AND field_path = ? AND actor_did > ?
+		 ORDER BY actor_did LIMIT ?`,
+		target, collection, fieldPath, after, limit,
 	)
 	if err != nil {
 		return 0, nil, fmt.Errorf("query distinct dids: %w", err)
