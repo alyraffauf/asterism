@@ -61,7 +61,7 @@ func (s *Store) DistinctBacklinkDids(ctx context.Context, target, collection, fi
 	return total, dids, nil
 }
 
-func (s *Store) ListBacklinks(ctx context.Context, target, collection, fieldPath string, dids[]string, reverse bool, after int64, limit uint64) (total uint64, records []Record, err error) {
+func (s *Store) ListBacklinks(ctx context.Context, target, collection, fieldPath string, dids []string, reverse bool, after int64, limit uint64) (total uint64, records []Record, err error) {
 	where := `target = ? AND collection = ? AND field_path = ?`
 	args := []any{target, collection, fieldPath}
 
@@ -74,7 +74,7 @@ func (s *Store) ListBacklinks(ctx context.Context, target, collection, fieldPath
 		where += `AND actor_did IN (` + strings.Join(placeholders, ", ") + `)`
 
 		err = s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM links WHERE `+where, args...).Scan(&total)
-		if err!= nil {
+		if err != nil {
 			return 0, nil, fmt.Errorf("count backlinks: %w", err)
 		}
 	} else {

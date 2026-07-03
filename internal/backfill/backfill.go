@@ -59,7 +59,7 @@ func (b *Backfill) Run(ctx context.Context, collections []string) error {
 	}
 
 	for did, wantedCollections := range dids {
-		if err := b.repo(ctx, did, wantedCollections); err != nil {
+		if err := b.Repo(ctx, did, wantedCollections); err != nil {
 			fmt.Println("could not backfill repo:", did, err)
 			continue
 		}
@@ -90,7 +90,7 @@ func (b *Backfill) listRepos(ctx context.Context, collection string, dids map[st
 	}
 }
 
-func (b *Backfill) repo(ctx context.Context, did string, wantedCollections map[string]struct{}) error {
+func (b *Backfill) Repo(ctx context.Context, did string, wantedCollections map[string]struct{}) error {
 	resolveCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	identity, err := b.Directory.LookupDID(resolveCtx, syntax.DID(did))
 	cancel()
@@ -126,8 +126,10 @@ func (b *Backfill) repo(ctx context.Context, did string, wantedCollections map[s
 			return fmt.Errorf("bad path: %s", k)
 		}
 
-		if _, wanted := wantedCollections[collection]; !wanted {
-			return nil
+		if len(wantedCollections) > 0 {
+			if _, wanted := wantedCollections[collection]; !wanted {
+				return nil
+			}
 		}
 
 		recordCid, recordBytes, err := repo.GetRecordBytes(ctx, k)

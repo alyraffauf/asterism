@@ -9,9 +9,9 @@ import (
 )
 
 type backlinkDidsResponse struct {
-	Total uint64 `json:"total"`
+	Total       uint64   `json:"total"`
 	LinkingDids []string `json:"linking_dids"`
-	Cursor *string `json:"cursor"`
+	Cursor      *string  `json:"cursor"`
 }
 
 func (s *Server) GetBacklinkDids(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +25,6 @@ func (s *Server) GetBacklinkDids(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 
 	limit := uint64(100)
 	if raw := query.Get("limit"); raw != "" {

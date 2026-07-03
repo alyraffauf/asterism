@@ -17,7 +17,6 @@ func isLinkTarget(s string) bool {
 	return false
 }
 
-
 func tryStrongRef(obj map[string]any) (target string, targetCid string, ok bool) {
 	if len(obj) != 2 {
 		return "", "", false
@@ -50,7 +49,6 @@ func arrayPathSuffix(val any) string {
 	return "[]"
 }
 
-
 func walk(path string, value any, base Link) []Link {
 	switch v := value.(type) {
 	case map[string]any:
@@ -74,7 +72,6 @@ func walk(path string, value any, base Link) []Link {
 			out = append(out, walk(path+arrayPathSuffix(val), val, base)...)
 		}
 		return out
-
 
 	case string:
 		if isLinkTarget(v) {

@@ -16,7 +16,11 @@ func (c *Consumer) HandleCommit(ctx context.Context, event *atproto.SyncSubscrib
 	// fmt.Println("repo:", event.Repo, "commit:", event.Rev)
 
 	if event.TooBig {
-		fmt.Println("too big, queue for backfill later")
+		go func() {
+			if err := c.Backfill.Repo(ctx, event.Repo, c.WantedCollections); err != nil {
+				fmt.Println("could not backfill too-big repo:", event.Repo, err)
+			}
+		}()
 		return nil
 	}
 

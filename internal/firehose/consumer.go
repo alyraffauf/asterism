@@ -1,10 +1,14 @@
 package firehose
 
-import "github.com/alyraffauf/asterism/internal/store"
+import (
+	"github.com/alyraffauf/asterism/internal/backfill"
+	"github.com/alyraffauf/asterism/internal/store"
+)
 
 type Consumer struct {
 	WantedCollections map[string]struct{}
 	Store             *store.Store
+	Backfill          *backfill.Backfill
 }
 
 func (c *Consumer) wants(collection string) bool {

@@ -69,12 +69,13 @@ func main() {
 		collections = append(collections, collection)
 	}
 
+	bf := &backfill.Backfill{
+		Client:    &xrpc.Client{Host: "https://relay1.us-east.bsky.network"},
+		Directory: identity.DefaultDirectory(),
+		Store:     linkStore,
+	}
+
 	if len(collections) > 0 {
-		bf := &backfill.Backfill{
-			Client:    &xrpc.Client{Host: "https://relay1.us-east.bsky.network"},
-			Directory: identity.DefaultDirectory(),
-			Store:     linkStore,
-		}
 		go func() {
 			if err := bf.Run(ctx, collections); err != nil {
 				fmt.Println("backfill error:", err)
@@ -85,6 +86,7 @@ func main() {
 	consumer := &firehose.Consumer{
 		WantedCollections: wantedCollections,
 		Store:             linkStore,
+		Backfill:          bf,
 	}
 
 	if err := consumer.Run(ctx, conn, logger); err != nil {
