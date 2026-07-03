@@ -50,7 +50,7 @@ func (c *Consumer) handleOperation(ctx context.Context, event *atproto.SyncSubsc
 	fmt.Println("op:", operation.Action, "collection:", collection, "rkey:", recordKey)
 
 	if operation.Action == "delete" {
-		return nil
+		return c.Store.DeleteLinks(ctx, event.Repo, collection, recordKey)
 	}
 
 	recordCid, recordBytes, err := repo.GetRecordBytes(ctx, operation.Path)
@@ -80,10 +80,7 @@ func (c *Consumer) handleOperation(ctx context.Context, event *atproto.SyncSubsc
 		Rev:        event.Rev,
 	}
 
-	for _, link := range backlink.Extract(record, base) {
-		fmt.Printf("link: %+v\n", link)
-	}
+	links := backlink.Extract(record, base)
 
-	return nil
-
+	return c.Store.SaveLinks(ctx, event.Repo, collection, recordKey, links)
 }

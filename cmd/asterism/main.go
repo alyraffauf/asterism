@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/alyraffauf/asterism/internal/firehose"
+	"github.com/alyraffauf/asterism/internal/store"
 )
 
 const relayURL = "wss://relay1.us-east.bsky.network/xrpc/com.atproto.sync.subscribeRepos"
@@ -44,8 +45,14 @@ func main() {
 	}
 	defer conn.Close()
 
+	linkStore, err := store.Open("asterism.db")
+	if err != nil {
+		panic(err)
+	}
+
 	consumer := &firehose.Consumer{
 		WantedCollections: parseCollections(*collectionsFlag),
+		Store:             linkStore,
 	}
 
 	if err := consumer.Run(ctx, conn, logger); err != nil {
