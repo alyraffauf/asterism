@@ -5,12 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"strings"
 
 	"github.com/bluesky-social/indigo/atproto/identity"
 	"github.com/bluesky-social/indigo/xrpc"
-	"github.com/gorilla/websocket"
 
 	"github.com/alyraffauf/asterism/internal/api"
 	"github.com/alyraffauf/asterism/internal/backfill"
@@ -43,12 +41,6 @@ func main() {
 
 	ctx := context.Background()
 	logger := slog.Default()
-
-	conn, _, err := websocket.DefaultDialer.Dial(relayURL, http.Header{})
-	if err != nil {
-		panic(err)
-	}
-	defer conn.Close()
 
 	linkStore, err := store.Open("asterism.db")
 	if err != nil {
@@ -89,7 +81,8 @@ func main() {
 		Backfill:          bf,
 	}
 
-	if err := consumer.Run(ctx, conn, logger); err != nil {
+	if err := consumer.Run(ctx, relayURL, logger); err != nil {
 		panic(err)
 	}
+
 }
