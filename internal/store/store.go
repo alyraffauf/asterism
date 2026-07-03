@@ -33,10 +33,16 @@ func Open(path string) (*Store, error) {
 		return nil, fmt.Errorf("open database: %w", err)
 	}
 
+	if _, err := db.Exec("PRAGMA journal_mode=WAL;"); err != nil {
+		return nil, fmt.Errorf("set journal mode: %w", err)
+	}
+	if _, err := db.Exec("PRAGMA busy_timeout=5000;"); err != nil {
+		return nil, fmt.Errorf("set busy timeout: %w", err)
+	}
+
 	if _, err := db.Exec(schema); err != nil {
 		return nil, fmt.Errorf("create schema: %w", err)
 	}
 
 	return &Store{db: db}, nil
-
 }
