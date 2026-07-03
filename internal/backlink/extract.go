@@ -1,8 +1,6 @@
 package backlink
 
 import (
-	"fmt"
-
 	"github.com/bluesky-social/indigo/atproto/syntax"
 )
 
@@ -13,8 +11,12 @@ func isLinkTarget(s string) bool {
 	if _, err := syntax.ParseDID(s); err == nil {
 		return true
 	}
+	if _, err := syntax.ParseURI(s); err == nil {
+		return true
+	}
 	return false
 }
+
 
 func tryStrongRef(obj map[string]any) (target string, targetCid string, ok bool) {
 	if len(obj) != 2 {
@@ -39,6 +41,16 @@ func joinPath(base, key string) string {
 	return base + "." + key
 }
 
+func arrayPathSuffix(val any) string {
+	if obj, ok := val.(map[string]any); ok {
+		if t, ok := obj["$type"].(string); ok {
+			return "[" + t + "]"
+		}
+	}
+	return "[]"
+}
+
+
 func walk(path string, value any, base Link) []Link {
 	switch v := value.(type) {
 	case map[string]any:
@@ -58,10 +70,11 @@ func walk(path string, value any, base Link) []Link {
 
 	case []any:
 		var out []Link
-		for i, val := range v {
-			out = append(out, walk(fmt.Sprintf("%s[%d]", path, i), val, base)...)
+		for _, val := range v {
+			out = append(out, walk(path+arrayPathSuffix(val), val, base)...)
 		}
 		return out
+
 
 	case string:
 		if isLinkTarget(v) {
