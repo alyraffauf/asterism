@@ -43,7 +43,7 @@ go run ./cmd/asterism/
 
 ## API
 
-Asterism implements three endpoints from the [microcosm links XRPC namespace](https://constellation.microcosm.blue/):
+Asterism implements all five current endpoints from the [microcosm links XRPC namespace](https://constellation.microcosm.blue/) (the older `/links/*` REST endpoints are deprecated upstream in favor of these and aren't implemented here):
 
 ### `GET /xrpc/blue.microcosm.links.getBacklinksCount`
 
@@ -87,11 +87,45 @@ Response: `{"total": 42, "records": [{"did": "...", "collection": "...", "rkey":
 
 Records identify the linking record by DID, collection, and rkey. Clients must hydrate display data separately (via AppView, PDS, etc.).
 
+### `GET /xrpc/blue.microcosm.links.getManyToMany`
+
+Join records linking to a subject with a second field path on those same records — a one-hop join in a single query. For example, `app.bsky.graph.listitem` records have both a `list` field and a `subject` field; joining them resolves list membership directly instead of requiring a `getBacklinks` call followed by N individual record lookups.
+
+| Parameter | Description |
+|---|---|
+| `subject` | Target AT-URI, DID, or URL (required) |
+| `source` | Collection and field path (required) |
+| `pathToOther` | Second field path on the same source record (required) |
+| `linkDid` | Filter to specific linking-record DIDs (repeatable) |
+| `otherSubject` | Filter to specific secondary link targets (repeatable) |
+| `limit` | Page size, 1–1000 (default 100) |
+| `cursor` | Pagination cursor from previous response |
+
+Response: `{"total": 42, "items": [{"linkRecord": {"did": "...", "collection": "...", "rkey": "..."}, "otherSubject": "..."}], "cursor": "..."}`
+
+### `GET /xrpc/blue.microcosm.links.getManyToManyCounts`
+
+Like `getManyToMany`, but grouped: counts of linking records per distinct secondary target instead of the individual records themselves. Useful when you only need aggregate counts, e.g. "how many people on each of these lists also follow me" without paginating every membership record.
+
+| Parameter | Description |
+|---|---|
+| `subject` | Target AT-URI, DID, or URL (required) |
+| `source` | Collection and field path (required) |
+| `pathToOther` | Second field path on the same source record (required) |
+| `did` | Filter to specific linking-record DIDs (repeatable) |
+| `otherSubject` | Filter to specific secondary link targets (repeatable) |
+| `limit` | Page size, 1–1000 (default 100) |
+| `cursor` | Pagination cursor from previous response |
+
+Response: `{"counts_by_other_subject": [{"subject": "...", "total": 42, "distinct": 12}], "cursor": "..."}`
+
+Note the DID filter parameter is `did` here, not `linkDid` like `getManyToMany` — a real inconsistency in the upstream Constellation API (their own source flags it as a known TODO), preserved here for compatibility rather than "fixed."
+
 ## Roadmap
 
 **Near term**
 
-- [ ] `blue.microcosm.links.getManyToMany` endpoint (Constellation parity)
+- [x] Full Constellation API parity (`getBacklinksCount`, `getBacklinkDids`, `getBacklinks`, `getManyToMany`, `getManyToManyCounts`)
 - [ ] Configurable listen address, database path, and relay URL
 - [ ] Account deletion and deactivation handling
 - [x] Graceful shutdown and Firehose reconnect

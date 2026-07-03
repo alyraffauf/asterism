@@ -14,14 +14,23 @@ func parseSource(raw string) (collection string, path string, err error) {
 		return "", "", fmt.Errorf("source is missing a collection before ':'")
 	}
 
+	path, err = normalizePath(rawPath)
+	if err != nil {
+		return "", "", fmt.Errorf("source path: %w", err)
+	}
+
+	return collection, path, nil
+}
+
+func normalizePath(rawPath string) (string, error) {
 	switch {
 	case rawPath == "":
-		return "", "", fmt.Errorf("source is missing a path after ':'")
+		return "", fmt.Errorf("path is empty")
 	case rawPath == ".":
-		return collection, ".", nil
+		return ".", nil
 	case strings.HasPrefix(rawPath, "."):
-		return "", "", fmt.Errorf("source path must not start with '.'")
+		return "", fmt.Errorf("path must not start with '.'")
 	default:
-		return collection, "." + rawPath, nil
+		return "." + rawPath, nil
 	}
 }
