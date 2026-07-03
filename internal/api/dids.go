@@ -15,8 +15,10 @@ type backlinkDidsResponse struct {
 }
 
 func (s *Server) GetBacklinkDids(w http.ResponseWriter, r *http.Request) {
-	subject := r.URL.Query().Get("subject")
-	source := r.URL.Query().Get("source")
+	query := r.URL.Query()
+
+	subject := query.Get("subject")
+	source := query.Get("source")
 
 	collection, path, err := parseSource(source)
 	if err != nil {
@@ -26,7 +28,7 @@ func (s *Server) GetBacklinkDids(w http.ResponseWriter, r *http.Request) {
 
 
 	limit := uint64(100)
-	if raw := r.URL.Query().Get("limit"); raw != "" {
+	if raw := query.Get("limit"); raw != "" {
 		parsed, err := strconv.ParseUint(raw, 10, 64)
 		if err != nil || parsed == 0 || parsed > 1000 {
 			http.Error(w, "limit must be a number between 1 and 1000", http.StatusBadRequest)
@@ -36,7 +38,7 @@ func (s *Server) GetBacklinkDids(w http.ResponseWriter, r *http.Request) {
 	}
 
 	after := ""
-	if raw := r.URL.Query().Get("cursor"); raw != "" {
+	if raw := query.Get("cursor"); raw != "" {
 		decoded, err := base64.StdEncoding.DecodeString(raw)
 		if err != nil {
 			http.Error(w, "invalid cursor", http.StatusBadRequest)

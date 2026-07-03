@@ -1,18 +1,27 @@
 package api
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
+
+	"github.com/alyraffauf/asterism/internal/store"
 )
 
-type backlinksCountResponse struct {
-	Total uint64 `json:"total"`
+type getBacklinksResponse struct {
+	Total   uint64         `json:"total"`
+	Records []store.Record `json:"records"`
+	Cursor  *string        `json:"cursor"`
 }
 
-func (s *Server) GetBacklinksCount(w http.ResponseWriter, r *http.Request) {
-	subject := r.URL.Query().Get("subject")
-	source := r.URL.Query().Get("source")
+func (s *Server) GetBacklinks(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+
+	subject := query.Get("subject")
+	source := query.Get("source")
+	dids := query["did"]
 
 	collection, path, err := parseSource(source)
 	if err != nil {
@@ -20,13 +29,46 @@ func (s *Server) GetBacklinksCount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	total, err := s.Store.CountBacklinks(r.Context(), subject, collection, path)
+	limit := uint64(100)
+	if raw := query.Get("limit"); raw != "" {
+		parsed, err := strconv.ParseUint(raw, 10, 64)
+		if err != nil || parsed == 0 || parsed > 1000 {
+			http.Error(w, "limit must be a number between 1 and 1000", http.StatusBadRequest)
+			return
+		}
+		limit = parsed
+	}
+
+	reverse := query.Get("reverse") == "true"
+
+	var after int64
+	if raw := query.Get("cursor"); raw != "" {
+		decoded, err := base64.StdEncoding.DecodeString(raw)
+		if err != nil {
+			http.Error(w, "invalid cursor", http.StatusBadRequest)
+			return
+		}
+		after, err = strconv.ParseInt(string(decoded), 10, 64)
+		if err != nil {
+			http.Error(w, "invalid cursor", http.StatusBadRequest)
+			return
+		}
+	}
+
+	total, records, err := s.Store.ListBacklinks(r.Context(), subject, collection, path, dids, reverse, after, limit)
 	if err != nil {
-		log.Println("count backlinks:", err)
+		log.Println("list backlinks:", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
+	var cursor *string
+	if uint64(len(records)) == limit {
+		last := records[len(records)-1]
+		encoded := base64.StdEncoding.EncodeToString([]byte(strconv.FormatInt(last.ID, 10)))
+		cursor = &encoded
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(backlinksCountResponse{Total: total})
+	json.NewEncoder(w).Encode(getBacklinksResponse{Total: total, Records: records, Cursor: cursor})
 }
