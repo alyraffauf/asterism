@@ -36,9 +36,6 @@ func tryStrongRef(obj map[string]any) (target string, targetCid string, ok bool)
 }
 
 func joinPath(base, key string) string {
-	if base == "" {
-		return key
-	}
 	return base + "." + key
 }
 
@@ -47,7 +44,7 @@ func walk(path string, value any, base Link) []Link {
 	case map[string]any:
 		if target, targetCid, ok := tryStrongRef(v); ok {
 			link := base
-			link.FieldPath = path
+			link.FieldPath = joinPath(path, "uri")
 			link.Target = target
 			link.TargetCid = targetCid
 			return []Link{link}
