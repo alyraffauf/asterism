@@ -94,7 +94,7 @@ Records identify the linking record by DID, collection, and rkey. Clients must h
 - [ ] `blue.microcosm.links.getManyToMany` endpoint (Constellation parity)
 - [ ] Configurable listen address, database path, and relay URL
 - [ ] Account deletion and deactivation handling
-- [ ] Graceful shutdown and Firehose reconnect
+- [x] Graceful shutdown and Firehose reconnect
 
 **Medium term**
 
