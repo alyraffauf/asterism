@@ -3,13 +3,17 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
 
+	"github.com/bluesky-social/indigo/atproto/identity"
+	"github.com/bluesky-social/indigo/xrpc"
 	"github.com/gorilla/websocket"
 
 	"github.com/alyraffauf/asterism/internal/api"
+	"github.com/alyraffauf/asterism/internal/backfill"
 	"github.com/alyraffauf/asterism/internal/firehose"
 	"github.com/alyraffauf/asterism/internal/store"
 )
@@ -57,10 +61,29 @@ func main() {
 			panic(err)
 		}
 	}()
-	defer conn.Close()
+
+	wantedCollections := parseCollections(*collectionsFlag)
+
+	var collections []string
+	for collection := range wantedCollections {
+		collections = append(collections, collection)
+	}
+
+	if len(collections) > 0 {
+		bf := &backfill.Backfill{
+			Client:    &xrpc.Client{Host: "https://relay1.us-east.bsky.network"},
+			Directory: identity.DefaultDirectory(),
+			Store:     linkStore,
+		}
+		go func() {
+			if err := bf.Run(ctx, collections); err != nil {
+				fmt.Println("backfill error:", err)
+			}
+		}()
+	}
 
 	consumer := &firehose.Consumer{
-		WantedCollections: parseCollections(*collectionsFlag),
+		WantedCollections: wantedCollections,
 		Store:             linkStore,
 	}
 

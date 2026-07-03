@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/alyraffauf/asterism/internal/backlink"
+	"github.com/alyraffauf/asterism/internal/index"
 	"github.com/bluesky-social/indigo/api/atproto"
-	"github.com/bluesky-social/indigo/atproto/atdata"
 	indigorepo "github.com/bluesky-social/indigo/repo"
 	"github.com/ipfs/go-cid"
 )
@@ -38,7 +37,6 @@ func (c *Consumer) HandleCommit(ctx context.Context, event *atproto.SyncSubscrib
 
 func (c *Consumer) handleOperation(ctx context.Context, event *atproto.SyncSubscribeRepos_Commit, repo *indigorepo.Repo, operation *atproto.SyncSubscribeRepos_RepoOp) error {
 	collection, recordKey, ok := strings.Cut(operation.Path, "/")
-
 	if !ok {
 		return fmt.Errorf("bad path: %s", operation.Path)
 	}
@@ -46,8 +44,6 @@ func (c *Consumer) handleOperation(ctx context.Context, event *atproto.SyncSubsc
 	if !c.wants(collection) {
 		return nil
 	}
-
-	fmt.Println("op:", operation.Action, "collection:", collection, "rkey:", recordKey)
 
 	if operation.Action == "delete" {
 		return c.Store.DeleteLinks(ctx, event.Repo, collection, recordKey)
@@ -67,20 +63,5 @@ func (c *Consumer) handleOperation(ctx context.Context, event *atproto.SyncSubsc
 		return fmt.Errorf("cid mismatch: %s operation=%s record=%s", operation.Path, operationCid, recordCid)
 	}
 
-	record, err := atdata.UnmarshalCBOR(*recordBytes)
-	if err != nil {
-		return fmt.Errorf("decode record: %w", err)
-	}
-
-	base := backlink.Link{
-		ActorDid:   event.Repo,
-		Collection: collection,
-		RecordKey:  recordKey,
-		RecordCid:  recordCid.String(),
-		Rev:        event.Rev,
-	}
-
-	links := backlink.Extract(record, base)
-
-	return c.Store.SaveLinks(ctx, event.Repo, collection, recordKey, links)
+	return index.Record(ctx, c.Store, event.Repo, collection, recordKey, recordCid.String(), event.Rev, *recordBytes)
 }
