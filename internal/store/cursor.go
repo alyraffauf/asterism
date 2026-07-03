@@ -18,7 +18,6 @@ func (s *Store) SaveCursor(ctx context.Context, seq int64) error {
 	return nil
 }
 
-
 func (s *Store) GetCursor(ctx context.Context) (int64, error) {
 	var seq int64
 	err := s.readDB.QueryRowContext(ctx, `SELECT seq FROM cursor WHERE id = 0`).Scan(&seq)

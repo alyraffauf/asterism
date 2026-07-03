@@ -30,7 +30,6 @@ func (c *Consumer) Run(ctx context.Context, relayURL string, logger *slog.Logger
 			dialURL = fmt.Sprintf("%s?cursor=%d", relayURL, cursor)
 		}
 
-
 		conn, _, err := websocket.DefaultDialer.DialContext(ctx, dialURL, http.Header{})
 		if err != nil {
 			logger.Warn("dial failed", "err", err, "retry in", backoff)
@@ -55,6 +54,9 @@ func (c *Consumer) stream(ctx context.Context, conn *websocket.Conn, logger *slo
 	callbacks := &events.RepoStreamCallbacks{
 		RepoCommit: func(event *atproto.SyncSubscribeRepos_Commit) error {
 			return c.HandleCommit(ctx, event)
+		},
+		RepoAccount: func(event *atproto.SyncSubscribeRepos_Account) error {
+			return c.HandleAccount(ctx, event)
 		},
 	}
 

@@ -18,7 +18,6 @@ type ManyToManyItem struct {
 	OtherSubject string `json:"otherSubject"`
 }
 
-
 type OtherSubjectCount struct {
 	Subject  string `json:"subject"`
 	Total    uint64 `json:"total"`

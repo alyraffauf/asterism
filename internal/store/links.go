@@ -34,6 +34,14 @@ func (s *Store) DeleteLinks(ctx context.Context, actorDid, collection, recordKey
 	return tx.Commit()
 }
 
+func (s *Store) DeleteAllLinks(ctx context.Context, actorDid string) error {
+	_, err := s.writeDB.ExecContext(ctx, `DELETE FROM links WHERE actor_did = ?`, actorDid)
+	if err != nil {
+		return fmt.Errorf("delete all links: %w", err)
+	}
+	return nil
+}
+
 func (s *Store) SaveLinks(ctx context.Context, actorDid, collection, recordKey string, links []backlink.Link) error {
 	tx, err := s.writeDB.BeginTx(ctx, nil)
 	if err != nil {

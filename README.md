@@ -6,7 +6,7 @@ Constellation is vital community infrastructure, and many ATProto apps have been
 
 Asterism, meanwhile, consumes cryptographically verifiable events directly from the Firehose, and filters them by the collection of your choice. There's no Jetstream in the middle, meaning fewer moving parts. And while Asterism has significant bandwidth requirements, the filtered index is significantly smaller and scales with your application, not with the network.
 
-> **Early stage.** Functional but *very* incomplete. APIs may change, backfill is rudimentary, and several features are not yet implemented. See [Roadmap](#roadmap).
+> **Early stage.** Functional but _very_ incomplete. APIs may change, backfill is rudimentary, and several features are not yet implemented. See [Roadmap](#roadmap).
 
 ## What it does
 
@@ -51,13 +51,13 @@ go run ./cmd/asterism/
 
 Every flag can also be set with an environment variable.
 
-| Flag | Environment variable | Default | Description |
-|---|---|---|---|
-| `--collections` | `ASTERISM_COLLECTIONS` | empty | Comma-separated collection NSIDs to index. Empty means all collections. |
-| `--backfill` | `ASTERISM_BACKFILL` | false | Backfill existing repos for configured collections on startup. |
-| `--database` | `ASTERISM_DATABASE` | `asterism.db` | SQLite database path. |
-| `--listen` | `ASTERISM_LISTEN` | `:8081` | HTTP API listen address. |
-| `--relay` | `ASTERISM_RELAY` | `relay1.us-east.bsky.network` | Relay host. Asterism derives the Firehose websocket and relay HTTP API URLs from this host. |
+| Flag            | Environment variable   | Default                       | Description                                                                                 |
+| --------------- | ---------------------- | ----------------------------- | ------------------------------------------------------------------------------------------- |
+| `--collections` | `ASTERISM_COLLECTIONS` | empty                         | Comma-separated collection NSIDs to index. Empty means all collections.                     |
+| `--backfill`    | `ASTERISM_BACKFILL`    | false                         | Backfill existing repos for configured collections on startup.                              |
+| `--database`    | `ASTERISM_DATABASE`    | `asterism.db`                 | SQLite database path.                                                                       |
+| `--listen`      | `ASTERISM_LISTEN`      | `:8081`                       | HTTP API listen address.                                                                    |
+| `--relay`       | `ASTERISM_RELAY`       | `relay1.us-east.bsky.network` | Relay host. Asterism derives the Firehose websocket and relay HTTP API URLs from this host. |
 
 For example:
 
@@ -89,12 +89,12 @@ Response: `{"total": 42}`
 
 List distinct DIDs that have records linking to a subject. Paginated.
 
-| Parameter | Description |
-|---|---|
-| `subject` | Target AT-URI, DID, or URL (required) |
-| `source` | Collection and field path, e.g. `app.bsky.feed.like:subject.uri` (required) |
-| `limit` | Page size, 1–1000 (default 100) |
-| `cursor` | Pagination cursor from previous response |
+| Parameter | Description                                                                 |
+| --------- | --------------------------------------------------------------------------- |
+| `subject` | Target AT-URI, DID, or URL (required)                                       |
+| `source`  | Collection and field path, e.g. `app.bsky.feed.like:subject.uri` (required) |
+| `limit`   | Page size, 1–1000 (default 100)                                             |
+| `cursor`  | Pagination cursor from previous response                                    |
 
 Response: `{"total": 42, "linking_dids": ["did:plc:..."], "cursor": "..."}`
 
@@ -102,14 +102,14 @@ Response: `{"total": 42, "linking_dids": ["did:plc:..."], "cursor": "..."}`
 
 List source records linking to a subject. Paginated.
 
-| Parameter | Description |
-|---|---|
-| `subject` | Target AT-URI, DID, or URL (required) |
-| `source` | Collection and field path (required) |
-| `did` | Filter to specific actor DIDs (repeatable) |
-| `limit` | Page size, 1–1000 (default 100) |
+| Parameter | Description                                     |
+| --------- | ----------------------------------------------- |
+| `subject` | Target AT-URI, DID, or URL (required)           |
+| `source`  | Collection and field path (required)            |
+| `did`     | Filter to specific actor DIDs (repeatable)      |
+| `limit`   | Page size, 1–1000 (default 100)                 |
 | `reverse` | Return links in ascending order (default false) |
-| `cursor` | Pagination cursor from previous response |
+| `cursor`  | Pagination cursor from previous response        |
 
 Response: `{"total": 42, "records": [{"did": "...", "collection": "...", "rkey": "..."}], "cursor": "..."}`
 
@@ -119,15 +119,15 @@ Records identify the linking record by DID, collection, and rkey. Clients must h
 
 Join records linking to a subject with a second field path on those same records — a one-hop join in a single query. For example, `app.bsky.graph.listitem` records have both a `list` field and a `subject` field; joining them resolves list membership directly instead of requiring a `getBacklinks` call followed by N individual record lookups.
 
-| Parameter | Description |
-|---|---|
-| `subject` | Target AT-URI, DID, or URL (required) |
-| `source` | Collection and field path (required) |
-| `pathToOther` | Second field path on the same source record (required) |
-| `linkDid` | Filter to specific linking-record DIDs (repeatable) |
+| Parameter      | Description                                            |
+| -------------- | ------------------------------------------------------ |
+| `subject`      | Target AT-URI, DID, or URL (required)                  |
+| `source`       | Collection and field path (required)                   |
+| `pathToOther`  | Second field path on the same source record (required) |
+| `linkDid`      | Filter to specific linking-record DIDs (repeatable)    |
 | `otherSubject` | Filter to specific secondary link targets (repeatable) |
-| `limit` | Page size, 1–1000 (default 100) |
-| `cursor` | Pagination cursor from previous response |
+| `limit`        | Page size, 1–1000 (default 100)                        |
+| `cursor`       | Pagination cursor from previous response               |
 
 Response: `{"total": 42, "items": [{"linkRecord": {"did": "...", "collection": "...", "rkey": "..."}, "otherSubject": "..."}], "cursor": "..."}`
 
@@ -135,15 +135,15 @@ Response: `{"total": 42, "items": [{"linkRecord": {"did": "...", "collection": "
 
 Like `getManyToMany`, but grouped: counts of linking records per distinct secondary target instead of the individual records themselves. Useful when you only need aggregate counts, e.g. "how many people on each of these lists also follow me" without paginating every membership record.
 
-| Parameter | Description |
-|---|---|
-| `subject` | Target AT-URI, DID, or URL (required) |
-| `source` | Collection and field path (required) |
-| `pathToOther` | Second field path on the same source record (required) |
-| `did` | Filter to specific linking-record DIDs (repeatable) |
+| Parameter      | Description                                            |
+| -------------- | ------------------------------------------------------ |
+| `subject`      | Target AT-URI, DID, or URL (required)                  |
+| `source`       | Collection and field path (required)                   |
+| `pathToOther`  | Second field path on the same source record (required) |
+| `did`          | Filter to specific linking-record DIDs (repeatable)    |
 | `otherSubject` | Filter to specific secondary link targets (repeatable) |
-| `limit` | Page size, 1–1000 (default 100) |
-| `cursor` | Pagination cursor from previous response |
+| `limit`        | Page size, 1–1000 (default 100)                        |
+| `cursor`       | Pagination cursor from previous response               |
 
 Response: `{"counts_by_other_subject": [{"subject": "...", "total": 42, "distinct": 12}], "cursor": "..."}`
 
@@ -155,7 +155,8 @@ Note the DID filter parameter is `did` here, not `linkDid` like `getManyToMany` 
 
 - [x] Full Constellation API parity (`getBacklinksCount`, `getBacklinkDids`, `getBacklinks`, `getManyToMany`, `getManyToManyCounts`)
 - [x] Configurable listen address, database path, relay host, and startup backfill
-- [ ] Account deletion and deactivation handling
+- [x] Account deletion handling
+- [ ] Account deactivation handling
 - [x] Graceful shutdown and Firehose reconnect
 
 **Medium term**
