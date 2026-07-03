@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	"github.com/alyraffauf/asterism/internal/api"
 	"github.com/alyraffauf/asterism/internal/firehose"
 	"github.com/alyraffauf/asterism/internal/store"
 )
@@ -49,6 +50,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	server := &api.Server{Store: linkStore}
+	go func() {
+		if err := server.Run(":8081"); err != nil {
+			panic(err)
+		}
+	}()
+	defer conn.Close()
 
 	consumer := &firehose.Consumer{
 		WantedCollections: parseCollections(*collectionsFlag),
