@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log/slog"
 	"strings"
 
+	"github.com/alecthomas/kong"
 	"github.com/bluesky-social/indigo/atproto/identity"
 	"github.com/bluesky-social/indigo/xrpc"
 
@@ -16,7 +16,17 @@ import (
 	"github.com/alyraffauf/asterism/internal/store"
 )
 
-const relayURL = "wss://relay1.us-east.bsky.network/xrpc/com.atproto.sync.subscribeRepos"
+const (
+	subscribeReposPath = "/xrpc/com.atproto.sync.subscribeRepos"
+)
+
+type CLI struct {
+	Collections string `help:"Comma-separated list of collection NSIDs to filter on. Empty means all." env:"ASTERISM_COLLECTIONS"`
+	Backfill    bool   `help:"Backfill existing repos on startup." env:"ASTERISM_BACKFILL"`
+	Database    string `help:"SQLite database path." env:"ASTERISM_DATABASE" default:"asterism.db"`
+	Listen      string `help:"HTTP listen address." env:"ASTERISM_LISTEN" default:":8081"`
+	Relay       string `help:"Relay host." env:"ASTERISM_RELAY" default:"relay1.us-east.bsky.network"`
+}
 
 func parseCollections(raw string) map[string]struct{} {
 	if raw == "" {
@@ -35,44 +45,59 @@ func parseCollections(raw string) map[string]struct{} {
 	return wanted
 }
 
+func relayHTTPHost(relayHost string) string {
+	return "https://" + relayHost
+}
+
+func subscribeReposURL(relayHost string) string {
+	return "wss://" + relayHost + subscribeReposPath
+}
+
 func main() {
-	collectionsFlag := flag.String("collections", "", "comma-separated list of collection NSIDs to filter on (empty means all)")
-	flag.Parse()
+	var cli CLI
+	kong.Parse(&cli,
+		kong.Name("asterism"),
+		kong.Description("AT Protocol link index."),
+	)
 
 	ctx := context.Background()
 	logger := slog.Default()
 
-	linkStore, err := store.Open("asterism.db")
+	linkStore, err := store.Open(cli.Database)
 	if err != nil {
 		panic(err)
 	}
 
 	server := &api.Server{Store: linkStore}
 	go func() {
-		if err := server.Run(":8081"); err != nil {
+		if err := server.Run(cli.Listen); err != nil {
 			panic(err)
 		}
 	}()
 
-	wantedCollections := parseCollections(*collectionsFlag)
+	wantedCollections := parseCollections(cli.Collections)
 
 	var collections []string
 	for collection := range wantedCollections {
 		collections = append(collections, collection)
 	}
 
+	relayURL := subscribeReposURL(cli.Relay)
+
 	bf := &backfill.Backfill{
-		Client:    &xrpc.Client{Host: "https://relay1.us-east.bsky.network"},
+		Client:    &xrpc.Client{Host: relayHTTPHost(cli.Relay)},
 		Directory: identity.DefaultDirectory(),
 		Store:     linkStore,
 	}
 
-	if len(collections) > 0 {
-		go func() {
-			if err := bf.Run(ctx, collections); err != nil {
-				fmt.Println("backfill error:", err)
-			}
-		}()
+	if cli.Backfill {
+		if len(collections) > 0 {
+			go func() {
+				if err := bf.Run(ctx, collections); err != nil {
+					fmt.Println("backfill error:", err)
+				}
+			}()
+		}
 	}
 
 	consumer := &firehose.Consumer{

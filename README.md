@@ -10,7 +10,7 @@ Asterism, meanwhile, consumes cryptographically verifiable events directly from 
 
 ## What it does
 
-Asterism connects directly to the relay Firehose (`com.atproto.sync.subscribeRepos`), decodes each repo commit's CAR-framed CBOR blocks itself, and recursively walks each record for link references (strong refs, AT-URIs, DIDs, URLs). Links are stored keyed by target, source collection, and field path. On startup it backfills existing repos for your configured collections so the index is useful immediately.
+Asterism connects directly to the relay Firehose (`com.atproto.sync.subscribeRepos`), decodes each repo commit's CAR-framed CBOR blocks itself, and recursively walks each record for link references (strong refs, AT-URIs, DIDs, URLs). Links are stored keyed by target, source collection, and field path. It can optionally backfill existing repos for your configured collections on startup so the index is useful immediately.
 
 This matters for two reasons:
 
@@ -30,14 +30,42 @@ Relay ──► Asterism                        (raw commits, filter locally)
 The typical deployment indexes only the collections your app queries:
 
 ```bash
-go run ./cmd/asterism/ -collections sh.tangled.graph.follow,sh.tangled.repo.issue,sh.tangled.feed.comment
+go run ./cmd/asterism/ --collections sh.tangled.graph.follow,sh.tangled.repo.issue,sh.tangled.feed.comment
 ```
 
-This connects to the relay Firehose, backfills existing repos for those collections in the background, stores links in an sqlite database at `asterism.db`, and serves the query API on `:8081`.
+This connects to the relay Firehose, stores links in an sqlite database at `asterism.db`, and serves the query API on `:8081`. Firehose events that are too large to include inline are fetched through the repo API automatically.
 
-To index all collections (Constellation-equivalent scope, not recommended for sovereign deployments):
+To also backfill existing repos for your configured collections on startup:
 
 ```bash
+go run ./cmd/asterism/ --backfill --collections sh.tangled.graph.follow,sh.tangled.repo.issue,sh.tangled.feed.comment
+```
+
+To live-index all collections (Constellation-equivalent scope, not recommended for sovereign deployments):
+
+```bash
+go run ./cmd/asterism/
+```
+
+### Configuration
+
+Every flag can also be set with an environment variable.
+
+| Flag | Environment variable | Default | Description |
+|---|---|---|---|
+| `--collections` | `ASTERISM_COLLECTIONS` | empty | Comma-separated collection NSIDs to index. Empty means all collections. |
+| `--backfill` | `ASTERISM_BACKFILL` | false | Backfill existing repos for configured collections on startup. |
+| `--database` | `ASTERISM_DATABASE` | `asterism.db` | SQLite database path. |
+| `--listen` | `ASTERISM_LISTEN` | `:8081` | HTTP API listen address. |
+| `--relay` | `ASTERISM_RELAY` | `relay1.us-east.bsky.network` | Relay host. Asterism derives the Firehose websocket and relay HTTP API URLs from this host. |
+
+For example:
+
+```bash
+ASTERISM_DATABASE=/var/lib/asterism/asterism.db \
+ASTERISM_LISTEN=:8081 \
+ASTERISM_COLLECTIONS=sh.tangled.graph.follow,sh.tangled.repo.issue \
+ASTERISM_BACKFILL=true \
 go run ./cmd/asterism/
 ```
 
@@ -126,7 +154,7 @@ Note the DID filter parameter is `did` here, not `linkDid` like `getManyToMany` 
 **Near term**
 
 - [x] Full Constellation API parity (`getBacklinksCount`, `getBacklinkDids`, `getBacklinks`, `getManyToMany`, `getManyToManyCounts`)
-- [ ] Configurable listen address, database path, and relay URL
+- [x] Configurable listen address, database path, relay host, and startup backfill
 - [ ] Account deletion and deactivation handling
 - [x] Graceful shutdown and Firehose reconnect
 

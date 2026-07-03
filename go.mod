@@ -3,6 +3,7 @@ module github.com/alyraffauf/asterism
 go 1.26.4
 
 require (
+	github.com/alecthomas/kong v1.15.0
 	github.com/bluesky-social/indigo v0.0.0-20260629160527-dfe5578fd537
 	github.com/gorilla/websocket v1.5.3
 	github.com/ipfs/go-cid v0.4.1
