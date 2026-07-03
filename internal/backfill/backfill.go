@@ -19,10 +19,34 @@ import (
 	indigorepo "github.com/bluesky-social/indigo/repo"
 )
 
+const hostPacingDelay = 2 * time.Second
+
 type Backfill struct {
 	Client    *xrpc.Client
 	Directory identity.Directory
 	Store     *store.Store
+
+	lastRequest map[string]time.Time
+}
+
+// don't DDoS the PDS
+func (b *Backfill) waitForHost(ctx context.Context, host string) error {
+	if b.lastRequest == nil {
+		b.lastRequest = make(map[string]time.Time)
+	}
+
+	if last, ok := b.lastRequest[host]; ok {
+		if wait := hostPacingDelay - time.Since(last); wait > 0 {
+			select {
+			case <-time.After(wait):
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		}
+	}
+
+	b.lastRequest[host] = time.Now()
+	return nil
 }
 
 func (b *Backfill) Run(ctx context.Context, collections []string) error {
@@ -77,6 +101,10 @@ func (b *Backfill) repo(ctx context.Context, did string, wantedCollections map[s
 	pdsClient := &xrpc.Client{
 		Host:   identity.PDSEndpoint(),
 		Client: &http.Client{Timeout: 5 * time.Minute},
+	}
+
+	if err := b.waitForHost(ctx, pdsClient.Host); err != nil {
+		return fmt.Errorf("wait for host: %w", err)
 	}
 
 	fetchCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
