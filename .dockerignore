@@ -1,0 +1,9 @@
+.git
+.github
+.gocache
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
+README.md
+LICENSE.md

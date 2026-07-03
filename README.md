@@ -69,6 +69,22 @@ ASTERISM_BACKFILL=true \
 go run ./cmd/asterism/
 ```
 
+### Docker
+
+A container image is published to `ghcr.io/alyraffauf/asterism` on every push to `master` and on tagged releases. The image is built `FROM gcr.io/distroless/static-debian12` — Asterism has no C dependencies (its SQLite driver is pure Go), so the final image is a single static binary plus CA certificates, nothing else.
+
+```bash
+docker run -d \
+  -p 8081:8081 \
+  -v asterism-data:/data \
+  -e ASTERISM_DATABASE=/data/asterism.db \
+  -e ASTERISM_COLLECTIONS=sh.tangled.graph.follow,sh.tangled.repo.issue \
+  -e ASTERISM_BACKFILL=true \
+  ghcr.io/alyraffauf/asterism:latest
+```
+
+To build locally instead: `docker build -t asterism .`
+
 ## API
 
 Asterism implements all five current endpoints from the [microcosm links XRPC namespace](https://constellation.microcosm.blue/) (the older `/links/*` REST endpoints are deprecated upstream in favor of these and aren't implemented here):
@@ -158,6 +174,7 @@ Note the DID filter parameter is `did` here, not `linkDid` like `getManyToMany` 
 - [x] Account deletion handling
 - [ ] Account deactivation handling
 - [x] Graceful shutdown and Firehose reconnect
+- [x] CI + Dockerfile
 
 **Medium term**
 
@@ -168,7 +185,7 @@ Note the DID filter parameter is `did` here, not `linkDid` like `getManyToMany` 
 
 **Longer term**
 
-- [ ] Deployment guides (Docker, single-binary production setup)
+- [ ] Deployment guides + Docker Compose + Helm Chart
 - [ ] Pluggable storage backends for larger indexes
 - [ ] Horizontal read scaling
 
