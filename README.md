@@ -113,7 +113,3 @@ Records identify the linking record by DID, collection, and rkey. Clients must h
 - [Constellation](https://constellation.microcosm.blue/) — The reference backlink index from [microcosm.blue](https://www.microcosm.blue/)
 - [Spacedust](https://www.microcosm.blue/) — Real-time link stream filtered by target
 - [indigo](https://github.com/bluesky-social/indigo) — Go ATProto library used for Firehose, repo, and identity handling
-
-## License
-
-TBD
