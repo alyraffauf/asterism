@@ -8,7 +8,8 @@ import (
 )
 
 type Store struct {
-	db *sql.DB
+	writeDB *sql.DB
+	readDB  *sql.DB
 }
 
 const schema = `
@@ -25,24 +26,37 @@ CREATE TABLE IF NOT EXISTS links (
 );
 CREATE INDEX IF NOT EXISTS idx_links_target ON links(target);
 CREATE INDEX IF NOT EXISTS idx_links_source ON links(actor_did, collection, record_key);
+CREATE TABLE IF NOT EXISTS cursor (
+	id  INTEGER PRIMARY KEY CHECK (id = 0),
+	seq INTEGER NOT NULL
+);
 `
 
 func Open(path string) (*Store, error) {
-	db, err := sql.Open("sqlite", path)
+	writeDB, err := sql.Open("sqlite", path)
 	if err != nil {
-		return nil, fmt.Errorf("open database: %w", err)
+		return nil, fmt.Errorf("open write database: %w", err)
 	}
 
-	if _, err := db.Exec("PRAGMA journal_mode=WAL;"); err != nil {
+	if _, err := writeDB.Exec("PRAGMA journal_mode=WAL;"); err != nil {
 		return nil, fmt.Errorf("set journal mode: %w", err)
 	}
-	if _, err := db.Exec("PRAGMA busy_timeout=5000;"); err != nil {
+	if _, err := writeDB.Exec("PRAGMA busy_timeout=5000;"); err != nil {
 		return nil, fmt.Errorf("set busy timeout: %w", err)
 	}
+	writeDB.SetMaxOpenConns(1)
 
-	if _, err := db.Exec(schema); err != nil {
+	if _, err := writeDB.Exec(schema); err != nil {
 		return nil, fmt.Errorf("create schema: %w", err)
 	}
 
-	return &Store{db: db}, nil
+	readDB, err := sql.Open("sqlite", path)
+	if err != nil {
+		return nil, fmt.Errorf("open read database: %w", err)
+	}
+	if _, err := readDB.Exec("PRAGMA busy_timeout=5000;"); err != nil {
+		return nil, fmt.Errorf("set read busy timeout: %w", err)
+	}
+
+	return &Store{writeDB: writeDB, readDB: readDB}, nil
 }

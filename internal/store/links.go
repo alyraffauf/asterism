@@ -21,7 +21,7 @@ func deleteLinks(ctx context.Context, tx *sql.Tx, actorDid, collection, recordKe
 }
 
 func (s *Store) DeleteLinks(ctx context.Context, actorDid, collection, recordKey string) error {
-	tx, err := s.db.BeginTx(ctx, nil)
+	tx, err := s.writeDB.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
@@ -35,7 +35,7 @@ func (s *Store) DeleteLinks(ctx context.Context, actorDid, collection, recordKey
 }
 
 func (s *Store) SaveLinks(ctx context.Context, actorDid, collection, recordKey string, links []backlink.Link) error {
-	tx, err := s.db.BeginTx(ctx, nil)
+	tx, err := s.writeDB.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}

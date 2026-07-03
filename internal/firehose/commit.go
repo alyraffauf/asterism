@@ -14,6 +14,10 @@ import (
 
 func (c *Consumer) HandleCommit(ctx context.Context, event *atproto.SyncSubscribeRepos_Commit) error {
 	// fmt.Println("repo:", event.Repo, "commit:", event.Rev)
+	//
+	if err := c.Store.SaveCursor(ctx, event.Seq); err != nil {
+		fmt.Println("could not save cursor:", err)
+	}
 
 	if event.TooBig {
 		go func() {

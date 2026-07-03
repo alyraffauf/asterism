@@ -2,6 +2,7 @@ package firehose
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -21,7 +22,16 @@ func (c *Consumer) Run(ctx context.Context, relayURL string, logger *slog.Logger
 	backoff := minBackoff
 
 	for {
-		conn, _, err := websocket.DefaultDialer.DialContext(ctx, relayURL, http.Header{})
+		dialURL := relayURL
+
+		if cursor, err := c.Store.GetCursor(ctx); err != nil {
+			logger.Warn("could not load cursor, starting from live tip", "err", err)
+		} else if cursor > 0 {
+			dialURL = fmt.Sprintf("%s?cursor=%d", relayURL, cursor)
+		}
+
+
+		conn, _, err := websocket.DefaultDialer.DialContext(ctx, dialURL, http.Header{})
 		if err != nil {
 			logger.Warn("dial failed", "err", err, "retry in", backoff)
 		} else {

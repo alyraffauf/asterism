@@ -16,7 +16,7 @@ type Record struct {
 func (s *Store) CountBacklinks(ctx context.Context, target, collection, fieldPath string) (uint64, error) {
 	var total uint64
 
-	err := s.db.QueryRowContext(ctx,
+	err := s.readDB.QueryRowContext(ctx,
 		`SELECT COUNT(*) FROM links WHERE target = ? AND collection = ? AND field_path = ?`,
 		target, collection, fieldPath,
 	).Scan(&total)
@@ -28,7 +28,7 @@ func (s *Store) CountBacklinks(ctx context.Context, target, collection, fieldPat
 }
 
 func (s *Store) DistinctBacklinkDids(ctx context.Context, target, collection, fieldPath string, after string, limit uint64) (total uint64, dids []string, err error) {
-	err = s.db.QueryRowContext(ctx,
+	err = s.readDB.QueryRowContext(ctx,
 		`SELECT COUNT(DISTINCT actor_did) FROM links WHERE target = ? AND collection = ? AND field_path = ?`,
 		target, collection, fieldPath,
 	).Scan(&total)
@@ -36,7 +36,7 @@ func (s *Store) DistinctBacklinkDids(ctx context.Context, target, collection, fi
 		return 0, nil, fmt.Errorf("count distinct dids: %w", err)
 	}
 
-	rows, err := s.db.QueryContext(ctx,
+	rows, err := s.readDB.QueryContext(ctx,
 		`SELECT DISTINCT actor_did FROM links
 		 WHERE target = ? AND collection = ? AND field_path = ? AND actor_did > ?
 		 ORDER BY actor_did LIMIT ?`,
@@ -73,7 +73,7 @@ func (s *Store) ListBacklinks(ctx context.Context, target, collection, fieldPath
 		}
 		where += `AND actor_did IN (` + strings.Join(placeholders, ", ") + `)`
 
-		err = s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM links WHERE `+where, args...).Scan(&total)
+		err = s.readDB.QueryRowContext(ctx, `SELECT COUNT(*) FROM links WHERE `+where, args...).Scan(&total)
 		if err != nil {
 			return 0, nil, fmt.Errorf("count backlinks: %w", err)
 		}
@@ -103,7 +103,7 @@ func (s *Store) ListBacklinks(ctx context.Context, target, collection, fieldPath
 	}
 	listArgs = append(listArgs, limit)
 
-	rows, err := s.db.QueryContext(ctx, query, listArgs...)
+	rows, err := s.readDB.QueryContext(ctx, query, listArgs...)
 	if err != nil {
 		return 0, nil, fmt.Errorf("query backlinks: %w", err)
 	}
