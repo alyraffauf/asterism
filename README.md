@@ -99,6 +99,7 @@ Records identify the linking record by DID, collection, and rkey. Clients must h
 **Medium term**
 
 - [ ] Robust automatic backfill with checkpoint/resume (survive restarts mid-backfill)
+- [ ] Exponential backoff for getRepo requests
 - [ ] Backfill progress reporting
 - [ ] Metrics and health endpoints
 
