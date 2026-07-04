@@ -24,6 +24,8 @@ func (s *Server) Run(addr string) error {
 
 	mux.HandleFunc("GET /xrpc/blue.microcosm.identity.resolveMiniDoc", s.GetMiniDidDoc)
 
+	mux.HandleFunc("GET /xrpc/com.atproto.identity.resolveHandle", s.ResolveHandle)
+
 	return http.ListenAndServe(addr, withCORS(mux))
 }
 
