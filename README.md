@@ -1,5 +1,8 @@
 # Asterism
 
+> **asterism** (n.) — a group of stars that forms a pattern in the night sky, but may or may not be an official constellation.
+> — [Cambridge Dictionary](https://dictionary.cambridge.org/dictionary/english/asterism)
+
 Asterism is an [AT Protocol](https://atproto.com) link index that consumes events from across the network. At its core, Asterism is a drop-in replacement for [Constellation](https://constellation.microcosm.blue/), and implements a compatible API. It is intended for app developers that want to own their own stack without rewriting their apps.
 
 Constellation is vital community infrastructure, and many ATProto apps have been built on its back, including my own, [atbbs.xyz](https://atbbs.xyz/). It can be run on a Raspberry Pi with modest storage requirements, thanks in part to its dependency on Jetstream, which provides a nice, reasonable JSON stream for events.
