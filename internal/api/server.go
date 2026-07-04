@@ -18,5 +18,12 @@ func (s *Server) Run(addr string) error {
 	mux.HandleFunc("GET /xrpc/blue.microcosm.links.getManyToMany", s.GetManyToMany)
 	mux.HandleFunc("GET /xrpc/blue.microcosm.links.getManyToManyCounts", s.GetManyToManyCounts)
 
-	return http.ListenAndServe(addr, mux)
+	return http.ListenAndServe(addr, withCORS(mux))
+}
+
+func withCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		next.ServeHTTP(w, r)
+	})
 }
