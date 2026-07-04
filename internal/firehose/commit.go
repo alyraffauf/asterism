@@ -5,16 +5,18 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/alyraffauf/asterism/internal/index"
 	"github.com/bluesky-social/indigo/api/atproto"
+	"github.com/bluesky-social/indigo/atproto/syntax"
 	indigorepo "github.com/bluesky-social/indigo/repo"
 	"github.com/ipfs/go-cid"
 )
 
 func (c *Consumer) HandleCommit(ctx context.Context, event *atproto.SyncSubscribeRepos_Commit) error {
 	// fmt.Println("repo:", event.Repo, "commit:", event.Rev)
-	//
+
 	if err := c.Store.SaveCursor(ctx, event.Seq); err != nil {
 		fmt.Println("could not save cursor:", err)
 	}
@@ -31,6 +33,15 @@ func (c *Consumer) HandleCommit(ctx context.Context, event *atproto.SyncSubscrib
 	repo, err := indigorepo.ReadRepoFromCar(ctx, bytes.NewReader(event.Blocks))
 	if err != nil {
 		return err
+	}
+
+	if !c.hasWantedOps(event.Ops) {
+		return nil
+	}
+
+	if err := c.verifyCommit(ctx, repo); err != nil {
+		fmt.Println("commit verification failed:", event.Repo, err)
+		return nil
 	}
 
 	for _, operation := range event.Ops {
@@ -72,4 +83,37 @@ func (c *Consumer) handleOperation(ctx context.Context, event *atproto.SyncSubsc
 	}
 
 	return index.Record(ctx, c.Store, event.Repo, collection, recordKey, recordCid.String(), event.Rev, *recordBytes)
+}
+
+func (c *Consumer) hasWantedOps(ops []*atproto.SyncSubscribeRepos_RepoOp) bool {
+	for _, op := range ops {
+		collection, _, ok := strings.Cut(op.Path, "/")
+		if ok && c.wants(collection) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Consumer) verifyCommit(ctx context.Context, repo *indigorepo.Repo) error {
+	sc := repo.SignedCommit()
+
+	resolveCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	identity, err := c.Directory.LookupDID(resolveCtx, syntax.DID(sc.Did))
+	cancel()
+	if err != nil {
+		return fmt.Errorf("resolve did: %w", err)
+	}
+
+	pubKey, err := identity.PublicKey()
+	if err != nil {
+		return fmt.Errorf("get public key: %w", err)
+	}
+
+	unsignedBytes, err := sc.Unsigned().BytesForSigning()
+	if err != nil {
+		return fmt.Errorf("marshal unsigned commit: %w", err)
+	}
+
+	return pubKey.HashAndVerify(unsignedBytes, sc.Sig)
 }

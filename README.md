@@ -179,6 +179,7 @@ Note the DID filter parameter is `did` here, not `linkDid` like `getManyToMany` 
 - [x] Graceful shutdown and Firehose reconnect
 - [x] CI + Dockerfile
 - [x] Add health endpoint
+- [x] Verify commits against the repo's signing key (not just CID/hash consistency)
 
 **Medium term**
 

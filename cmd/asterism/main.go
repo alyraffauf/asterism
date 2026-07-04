@@ -103,6 +103,7 @@ func main() {
 	consumer := &firehose.Consumer{
 		WantedCollections: wantedCollections,
 		Store:             linkStore,
+		Directory:         bf.Directory,
 		Backfill:          bf,
 	}
 

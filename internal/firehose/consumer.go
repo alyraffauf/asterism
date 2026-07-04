@@ -3,11 +3,13 @@ package firehose
 import (
 	"github.com/alyraffauf/asterism/internal/backfill"
 	"github.com/alyraffauf/asterism/internal/store"
+	"github.com/bluesky-social/indigo/atproto/identity"
 )
 
 type Consumer struct {
 	WantedCollections map[string]struct{}
 	Store             *store.Store
+	Directory         identity.Directory
 	Backfill          *backfill.Backfill
 }
 
