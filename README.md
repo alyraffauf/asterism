@@ -9,15 +9,17 @@ Constellation is vital community infrastructure, and many ATProto apps have been
 
 Asterism, meanwhile, consumes cryptographically verifiable events directly from the Firehose, and filters them by the collection of your choice. There's no Jetstream in the middle, meaning fewer moving parts. And while Asterism has significant bandwidth requirements, the filtered index is significantly smaller and scales with your application, not with the network.
 
-> **Early stage.** Functional but _very_ incomplete. APIs may change, backfill is rudimentary, and several features are not yet implemented. See [Roadmap](#roadmap).
+> **Early stage.** Functional but incomplete. APIs may change, backfill is rudimentary, and several features are not yet implemented. See [Roadmap](#roadmap).
 
 ## What it does
 
 Asterism connects directly to the relay Firehose (`com.atproto.sync.subscribeRepos`), decodes each repo commit's CAR-framed CBOR blocks itself, and recursively walks each record for link references (strong refs, AT-URIs, DIDs, URLs). Links are stored keyed by target, source collection, and field path. It can optionally backfill existing repos for your configured collections on startup so the index is useful immediately.
 
-This matters for two reasons:
+This matters for three reasons:
 
-**Sovereignty** — One fewer dependency and one fewer hop. You're reading straight from the relay, not downstream of someone else's stream processor.
+**Sovereignty** — No middlemen. Asterism reads straight from the relay Firehose, and doesn't rely on secondary processors like Jetstream.
+
+**Latency** — Fewer hops also means fresher data faster. Asterism reduces Constellation's Relay → Jetstream → Constellation to a single hop, Relay -> Asterism.
 
 **Verifiability** — Firehose commits carry signed MST proofs; Jetstream strips them and re-serializes as plain JSON. Asterism verifies each record against its repo's signed commit instead of trusting an upstream re-encoding.
 
