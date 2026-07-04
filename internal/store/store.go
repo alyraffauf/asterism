@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -59,4 +60,8 @@ func Open(path string) (*Store, error) {
 	}
 
 	return &Store{writeDB: writeDB, readDB: readDB}, nil
+}
+
+func (s *Store) Ping(ctx context.Context) error {
+	return s.readDB.PingContext(ctx)
 }

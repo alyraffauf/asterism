@@ -175,13 +175,14 @@ Note the DID filter parameter is `did` here, not `linkDid` like `getManyToMany` 
 - [ ] Account deactivation handling
 - [x] Graceful shutdown and Firehose reconnect
 - [x] CI + Dockerfile
+- [x] Add health endpoint
 
 **Medium term**
 
 - [ ] Robust automatic backfill with checkpoint/resume (survive restarts mid-backfill)
 - [ ] Exponential backoff for getRepo requests
 - [ ] Backfill progress reporting
-- [ ] Metrics and health endpoints
+- [ ] Prometheus metrics endpoint
 
 **Longer term**
 
