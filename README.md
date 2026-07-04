@@ -90,7 +90,7 @@ To build locally instead: `docker build -t asterism .`
 
 ## API
 
-Asterism implements all five current endpoints from the [microcosm links XRPC namespace](https://constellation.microcosm.blue/) (the older `/links/*` REST endpoints are deprecated upstream in favor of these and aren't implemented here), plus one identity endpoint borrowed from [Slingshot](https://slingshot.microcosm.blue/):
+Asterism implements all five current endpoints from the [microcosm links XRPC namespace](https://constellation.microcosm.blue/) (the older `/links/*` REST endpoints are deprecated upstream in favor of these and aren't implemented here), plus an identity endpoint borrowed from [Slingshot](https://slingshot.microcosm.blue/) and the standard `com.atproto.identity.resolveHandle`:
 
 ### `GET /xrpc/blue.microcosm.links.getBacklinksCount`
 
@@ -177,6 +177,16 @@ Resolve a handle or DID to its identity. Asterism already resolves DIDs to verif
 | `identifier` | Handle or DID to resolve (required)  |
 
 Response: `{"did": "...", "handle": "...", "pds": "...", "signing_key": "..."}`
+
+### `GET /xrpc/com.atproto.identity.resolveHandle`
+
+Resolve a handle to a DID. This is a standard atproto lexicon (not microcosm-specific), included for compatibility with generic atproto tooling that expects any resolver/PDS to expose it.
+
+| Parameter | Description                  |
+| --------- | ----------------------------- |
+| `handle`  | Handle to resolve (required) |
+
+Response: `{"did": "..."}`
 
 ## Roadmap
 
