@@ -4,10 +4,12 @@ import (
 	"net/http"
 
 	"github.com/alyraffauf/asterism/internal/store"
+	"github.com/bluesky-social/indigo/atproto/identity"
 )
 
 type Server struct {
-	Store *store.Store
+	Store     *store.Store
+	Directory identity.Directory
 }
 
 func (s *Server) Run(addr string) error {
@@ -19,6 +21,8 @@ func (s *Server) Run(addr string) error {
 	mux.HandleFunc("GET /xrpc/blue.microcosm.links.getBacklinks", s.GetBacklinks)
 	mux.HandleFunc("GET /xrpc/blue.microcosm.links.getManyToMany", s.GetManyToMany)
 	mux.HandleFunc("GET /xrpc/blue.microcosm.links.getManyToManyCounts", s.GetManyToManyCounts)
+
+	mux.HandleFunc("GET /xrpc/blue.microcosm.identity.resolveMiniDoc", s.GetMiniDidDoc)
 
 	return http.ListenAndServe(addr, withCORS(mux))
 }

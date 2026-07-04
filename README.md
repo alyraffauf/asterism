@@ -90,7 +90,7 @@ To build locally instead: `docker build -t asterism .`
 
 ## API
 
-Asterism implements all five current endpoints from the [microcosm links XRPC namespace](https://constellation.microcosm.blue/) (the older `/links/*` REST endpoints are deprecated upstream in favor of these and aren't implemented here):
+Asterism implements all five current endpoints from the [microcosm links XRPC namespace](https://constellation.microcosm.blue/) (the older `/links/*` REST endpoints are deprecated upstream in favor of these and aren't implemented here), plus one identity endpoint borrowed from [Slingshot](https://slingshot.microcosm.blue/):
 
 ### `GET /xrpc/blue.microcosm.links.getBacklinksCount`
 
@@ -167,6 +167,16 @@ Like `getManyToMany`, but grouped: counts of linking records per distinct second
 Response: `{"counts_by_other_subject": [{"subject": "...", "total": 42, "distinct": 12}], "cursor": "..."}`
 
 Note the DID filter parameter is `did` here, not `linkDid` like `getManyToMany` — a real inconsistency in the upstream Constellation API (their own source flags it as a known TODO), preserved here for compatibility rather than "fixed."
+
+### `GET /xrpc/blue.microcosm.identity.resolveMiniDoc`
+
+Resolve a handle or DID to its identity. Asterism already resolves DIDs to verify commit signatures against the repo's signing key, so this endpoint is essentially free.
+
+| Parameter    | Description                          |
+| ------------ | ------------------------------------- |
+| `identifier` | Handle or DID to resolve (required)  |
+
+Response: `{"did": "...", "handle": "...", "pds": "...", "signing_key": "..."}`
 
 ## Roadmap
 

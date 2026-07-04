@@ -68,7 +68,9 @@ func main() {
 		panic(err)
 	}
 
-	server := &api.Server{Store: linkStore}
+	directory := identity.DefaultDirectory()
+
+	server := &api.Server{Store: linkStore, Directory: directory}
 	go func() {
 		if err := server.Run(cli.Listen); err != nil {
 			panic(err)
@@ -86,7 +88,7 @@ func main() {
 
 	bf := &backfill.Backfill{
 		Client:    &xrpc.Client{Host: relayHTTPHost(cli.Relay)},
-		Directory: identity.DefaultDirectory(),
+		Directory: directory,
 		Store:     linkStore,
 	}
 
@@ -103,7 +105,7 @@ func main() {
 	consumer := &firehose.Consumer{
 		WantedCollections: wantedCollections,
 		Store:             linkStore,
-		Directory:         bf.Directory,
+		Directory:         directory,
 		Backfill:          bf,
 	}
 
