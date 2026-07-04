@@ -47,6 +47,8 @@ func (s *Store) DistinctBacklinkDids(ctx context.Context, target, collection, fi
 		return 0, nil, fmt.Errorf("count distinct dids: %w", err)
 	}
 
+	dids = []string{}
+
 	rows, err := s.readDB.QueryContext(ctx,
 		`SELECT DISTINCT actor_did FROM links
 		 WHERE target = ? AND collection = ? AND field_path = ? AND actor_did > ?
@@ -94,6 +96,8 @@ func (s *Store) ListBacklinks(ctx context.Context, target, collection, fieldPath
 			return 0, nil, err
 		}
 	}
+
+	records = []Record{}
 
 	query := `SELECT id, actor_did, collection, record_key FROM links WHERE ` + where
 	listArgs := append([]any{}, args...)
@@ -164,6 +168,8 @@ func (s *Store) ManyToMany(ctx context.Context, target, collection, fieldPath, p
 		return 0, nil, fmt.Errorf("count many to many: %w", err)
 	}
 
+	items = []ManyToManyItem{}
+
 	listQuery := `SELECT a.id, a.actor_did, a.collection, a.record_key, b.target` + joinClause
 	listArgs := append([]any{}, args...)
 
@@ -219,6 +225,8 @@ func (s *Store) ManyToManyCounts(ctx context.Context, target, collection, fieldP
 
 	where += ` AND b.target > ?`
 	args = append(args, after)
+
+	counts = []OtherSubjectCount{}
 
 	query := `SELECT b.target, COUNT(*), COUNT(DISTINCT a.actor_did)
 		FROM links a JOIN links b
