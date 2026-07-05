@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -25,6 +26,7 @@ type Backfill struct {
 	Client    *xrpc.Client
 	Directory identity.Directory
 	Store     *store.Store
+	Logger    *slog.Logger
 
 	lastRequest map[string]time.Time
 }
@@ -60,7 +62,7 @@ func (b *Backfill) Run(ctx context.Context, collections []string) error {
 
 	for did, wantedCollections := range dids {
 		if err := b.Repo(ctx, did, wantedCollections); err != nil {
-			fmt.Println("could not backfill repo:", did, err)
+			b.Logger.Error("could not backfill repo", "did", did, "err", err)
 			continue
 		}
 	}

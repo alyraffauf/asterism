@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/base64"
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -62,7 +61,7 @@ func (s *Server) GetManyToMany(w http.ResponseWriter, r *http.Request) {
 
 	total, items, err := s.Store.ManyToMany(r.Context(), subject, collection, path, pathToOther, linkDids, otherSubjects, after, limit)
 	if err != nil {
-		log.Println("many to many:", err)
+		s.Logger.Error("many to many", "err", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}

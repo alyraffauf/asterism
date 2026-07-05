@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/alyraffauf/asterism/internal/store"
@@ -10,6 +11,7 @@ import (
 type Server struct {
 	Store     *store.Store
 	Directory identity.Directory
+	Logger    *slog.Logger
 }
 
 func (s *Server) Run(addr string) error {

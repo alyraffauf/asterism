@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -31,7 +30,7 @@ func (s *Server) ResolveHandle(w http.ResponseWriter, r *http.Request) {
 
 	identity, err := s.Directory.LookupHandle(resolveCtx, handle)
 	if err != nil {
-		log.Println("resolve handle:", err)
+		s.Logger.Error("resolve handle", "err", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}

@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 )
 
@@ -24,7 +23,7 @@ func (s *Server) GetBacklinksCount(w http.ResponseWriter, r *http.Request) {
 
 	total, err := s.Store.CountBacklinks(r.Context(), subject, collection, path)
 	if err != nil {
-		log.Println("count backlinks:", err)
+		s.Logger.Error("count backlinks", "err", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}

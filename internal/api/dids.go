@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/base64"
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -48,7 +47,7 @@ func (s *Server) GetBacklinkDids(w http.ResponseWriter, r *http.Request) {
 
 	total, dids, err := s.Store.DistinctBacklinkDids(r.Context(), subject, collection, path, after, limit)
 	if err != nil {
-		log.Println("distinct backlink dids:", err)
+		s.Logger.Error("distinct backlink dids", "err", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}

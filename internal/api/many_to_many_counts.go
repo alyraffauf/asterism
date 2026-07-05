@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/base64"
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -57,7 +56,7 @@ func (s *Server) GetManyToManyCounts(w http.ResponseWriter, r *http.Request) {
 
 	counts, err := s.Store.ManyToManyCounts(r.Context(), subject, collection, path, pathToOther, linkDids, otherSubjects, after, limit)
 	if err != nil {
-		log.Println("many to many counts:", err)
+		s.Logger.Error("many to many counts", "err", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}

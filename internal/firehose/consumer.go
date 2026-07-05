@@ -1,6 +1,8 @@
 package firehose
 
 import (
+	"log/slog"
+
 	"github.com/alyraffauf/asterism/internal/backfill"
 	"github.com/alyraffauf/asterism/internal/store"
 	"github.com/bluesky-social/indigo/atproto/identity"
@@ -11,6 +13,7 @@ type Consumer struct {
 	Store             *store.Store
 	Directory         identity.Directory
 	Backfill          *backfill.Backfill
+	Logger            *slog.Logger
 }
 
 func (c *Consumer) wants(collection string) bool {

@@ -15,16 +15,14 @@ import (
 )
 
 func (c *Consumer) HandleCommit(ctx context.Context, event *atproto.SyncSubscribeRepos_Commit) error {
-	// fmt.Println("repo:", event.Repo, "commit:", event.Rev)
-
 	if err := c.Store.SaveCursor(ctx, event.Seq); err != nil {
-		fmt.Println("could not save cursor:", err)
+		c.Logger.Error("could not save cursor", "err", err)
 	}
 
 	if event.TooBig {
 		go func() {
 			if err := c.Backfill.Repo(ctx, event.Repo, c.WantedCollections); err != nil {
-				fmt.Println("could not backfill too-big repo:", event.Repo, err)
+				c.Logger.Error("could not backfill too-big repo", "repo", event.Repo, "err", err)
 			}
 		}()
 		return nil
@@ -40,13 +38,13 @@ func (c *Consumer) HandleCommit(ctx context.Context, event *atproto.SyncSubscrib
 	}
 
 	if err := c.verifyCommit(ctx, repo); err != nil {
-		fmt.Println("commit verification failed:", event.Repo, err)
+		c.Logger.Error("commit verification failed", "repo", event.Repo, "err", err)
 		return nil
 	}
 
 	for _, operation := range event.Ops {
 		if err := c.handleOperation(ctx, event, repo, operation); err != nil {
-			fmt.Println("could not handle operation:", err)
+			c.Logger.Error("could not handle operation", "err", err)
 			continue
 		}
 	}

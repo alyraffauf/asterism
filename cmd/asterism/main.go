@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"strings"
 
@@ -70,7 +69,7 @@ func main() {
 
 	directory := identity.DefaultDirectory()
 
-	server := &api.Server{Store: linkStore, Directory: directory}
+	server := &api.Server{Store: linkStore, Directory: directory, Logger: logger}
 	go func() {
 		if err := server.Run(cli.Listen); err != nil {
 			panic(err)
@@ -90,13 +89,14 @@ func main() {
 		Client:    &xrpc.Client{Host: relayHTTPHost(cli.Relay)},
 		Directory: directory,
 		Store:     linkStore,
+		Logger:    logger,
 	}
 
 	if cli.Backfill {
 		if len(collections) > 0 {
 			go func() {
 				if err := bf.Run(ctx, collections); err != nil {
-					fmt.Println("backfill error:", err)
+					logger.Error("backfill error", "err", err)
 				}
 			}()
 		}
@@ -107,9 +107,10 @@ func main() {
 		Store:             linkStore,
 		Directory:         directory,
 		Backfill:          bf,
+		Logger:            logger,
 	}
 
-	if err := consumer.Run(ctx, relayURL, logger); err != nil {
+	if err := consumer.Run(ctx, relayURL); err != nil {
 		panic(err)
 	}
 

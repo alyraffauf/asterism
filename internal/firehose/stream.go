@@ -3,7 +3,6 @@ package firehose
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"time"
 
@@ -18,24 +17,24 @@ const (
 	maxBackoff = 30 * time.Second
 )
 
-func (c *Consumer) Run(ctx context.Context, relayURL string, logger *slog.Logger) error {
+func (c *Consumer) Run(ctx context.Context, relayURL string) error {
 	backoff := minBackoff
 
 	for {
 		dialURL := relayURL
 
 		if cursor, err := c.Store.GetCursor(ctx); err != nil {
-			logger.Warn("could not load cursor, starting from live tip", "err", err)
+			c.Logger.Warn("could not load cursor, starting from live tip", "err", err)
 		} else if cursor > 0 {
 			dialURL = fmt.Sprintf("%s?cursor=%d", relayURL, cursor)
 		}
 
 		conn, _, err := websocket.DefaultDialer.DialContext(ctx, dialURL, http.Header{})
 		if err != nil {
-			logger.Warn("dial failed", "err", err, "retry in", backoff)
+			c.Logger.Warn("dial failed", "err", err, "retry in", backoff)
 		} else {
 			backoff = minBackoff
-			c.stream(ctx, conn, logger)
+			c.stream(ctx, conn)
 			conn.Close()
 		}
 
@@ -50,7 +49,7 @@ func (c *Consumer) Run(ctx context.Context, relayURL string, logger *slog.Logger
 
 }
 
-func (c *Consumer) stream(ctx context.Context, conn *websocket.Conn, logger *slog.Logger) {
+func (c *Consumer) stream(ctx context.Context, conn *websocket.Conn) {
 	callbacks := &events.RepoStreamCallbacks{
 		RepoCommit: func(event *atproto.SyncSubscribeRepos_Commit) error {
 			return c.HandleCommit(ctx, event)
@@ -62,7 +61,7 @@ func (c *Consumer) stream(ctx context.Context, conn *websocket.Conn, logger *slo
 
 	scheduler := sequential.NewScheduler("asterism", callbacks.EventHandler)
 
-	if err := events.HandleRepoStream(ctx, conn, scheduler, logger); err != nil {
-		logger.Warn("stream ended", "err", err)
+	if err := events.HandleRepoStream(ctx, conn, scheduler, c.Logger); err != nil {
+		c.Logger.Warn("stream ended", "err", err)
 	}
 }

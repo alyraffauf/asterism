@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/base64"
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -57,7 +56,7 @@ func (s *Server) GetBacklinks(w http.ResponseWriter, r *http.Request) {
 
 	total, records, err := s.Store.ListBacklinks(r.Context(), subject, collection, path, dids, reverse, after, limit)
 	if err != nil {
-		log.Println("list backlinks:", err)
+		s.Logger.Error("list backlinks", "err", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
