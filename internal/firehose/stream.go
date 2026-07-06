@@ -8,7 +8,7 @@ import (
 
 	"github.com/bluesky-social/indigo/api/atproto"
 	"github.com/bluesky-social/indigo/events"
-	"github.com/bluesky-social/indigo/events/schedulers/sequential"
+	"github.com/bluesky-social/indigo/events/schedulers/parallel"
 	"github.com/gorilla/websocket"
 )
 
@@ -59,7 +59,24 @@ func (c *Consumer) stream(ctx context.Context, conn *websocket.Conn) {
 		},
 	}
 
-	scheduler := sequential.NewScheduler("asterism", callbacks.EventHandler)
+	tracker := newCursorTracker()
+
+	handle := func(ctx context.Context, event *events.XRPCStreamEvent) error {
+		err := callbacks.EventHandler(ctx, event)
+
+		if seq, ok := event.GetSequence(); ok {
+			if advanced, ok := tracker.markDone(seq); ok {
+				if saveErr := c.Store.SaveCursor(ctx, advanced); saveErr != nil {
+					c.Logger.Error("could not save cursor", "err", saveErr)
+				}
+			}
+		}
+
+		return err
+	}
+
+	concurrency := max(c.Concurrency, 1)
+	scheduler := parallel.NewScheduler(concurrency, concurrency, "asterism", handle)
 
 	if err := events.HandleRepoStream(ctx, conn, scheduler, c.Logger); err != nil {
 		c.Logger.Warn("stream ended", "err", err)

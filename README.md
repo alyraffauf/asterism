@@ -63,6 +63,7 @@ Every flag can also be set with an environment variable.
 | `--database`    | `ASTERISM_DATABASE`    | `asterism.db`                 | SQLite database path.                                                                       |
 | `--listen`      | `ASTERISM_LISTEN`      | `:8081`                       | HTTP API listen address.                                                                    |
 | `--relay`       | `ASTERISM_RELAY`       | `relay1.us-east.bsky.network` | Relay host. Asterism derives the Firehose websocket and relay HTTP API URLs from this host. |
+| `--concurrency` | `ASTERISM_CONCURRENCY` | `64`                          | Number of repos to verify and index concurrently. Different repos' commits are verified (including DID doc resolution) in parallel; a single repo's commits are still always applied in order. |
 
 For example:
 

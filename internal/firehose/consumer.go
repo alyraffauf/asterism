@@ -14,6 +14,7 @@ type Consumer struct {
 	Directory         identity.Directory
 	Backfill          *backfill.Backfill
 	Logger            *slog.Logger
+	Concurrency       int
 }
 
 func (c *Consumer) wants(collection string) bool {

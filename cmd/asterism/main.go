@@ -25,6 +25,7 @@ type CLI struct {
 	Database    string `help:"SQLite database path." env:"ASTERISM_DATABASE" default:"asterism.db"`
 	Listen      string `help:"HTTP listen address." env:"ASTERISM_LISTEN" default:":8081"`
 	Relay       string `help:"Relay host." env:"ASTERISM_RELAY" default:"relay1.us-east.bsky.network"`
+	Concurrency int    `help:"Number of repos to verify and index concurrently." env:"ASTERISM_CONCURRENCY" default:"64"`
 }
 
 func parseCollections(raw string) map[string]struct{} {
@@ -108,6 +109,7 @@ func main() {
 		Directory:         directory,
 		Backfill:          bf,
 		Logger:            logger,
+		Concurrency:       cli.Concurrency,
 	}
 
 	if err := consumer.Run(ctx, relayURL); err != nil {
