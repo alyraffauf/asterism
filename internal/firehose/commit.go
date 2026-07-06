@@ -96,7 +96,7 @@ func (c *Consumer) hasWantedOps(ops []*atproto.SyncSubscribeRepos_RepoOp) bool {
 func (c *Consumer) verifyCommit(ctx context.Context, repo *indigorepo.Repo) error {
 	sc := repo.SignedCommit()
 
-	resolveCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	resolveCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	identity, err := c.Directory.LookupDID(resolveCtx, syntax.DID(sc.Did))
 	cancel()
 	if err != nil {
