@@ -15,17 +15,11 @@ Asterism, meanwhile, consumes cryptographically verifiable events directly from 
 
 Asterism connects directly to the relay Firehose (`com.atproto.sync.subscribeRepos`), decodes each repo commit's CAR-framed CBOR blocks itself, and recursively walks each record for link references (strong refs, AT-URIs, DIDs, URLs). Links are stored keyed by target, source collection, and field path. It can optionally backfill existing repos for your configured collections on startup so the index is useful immediately.
 
-This matters for three reasons:
-
-**Sovereignty** — No middlemen. Asterism reads straight from the relay Firehose, and doesn't rely on secondary processors like Jetstream.
-
-**Latency** — Fewer hops also means fresher data faster. Asterism reduces Constellation's Relay → Jetstream → Constellation to a single hop, Relay -> Asterism.
-
-**Verifiability** — Firehose commits carry signed MST proofs; Jetstream strips them and re-serializes as plain JSON. Asterism verifies each record against its repo's signed commit instead of trusting an upstream re-encoding.
+Because Asterism connects directly to the relay Firehose, and doesn't rely on secondary processors like the Jetstream, it can achieve very low latencies for near-realtime backlinks while preserving MST integrity checks.
 
 ```
-Relay ──► Jetstream ──► Constellation     (preprocessed events)
-Relay ──► Asterism                        (raw commits, filter locally)
+Relay ──► Jetstream ──► Constellation ──► Apps
+Relay ──► Asterism ──► Apps
 ```
 
 ## Quick start
